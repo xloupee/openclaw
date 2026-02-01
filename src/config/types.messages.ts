@@ -22,9 +22,20 @@ export type QueueConfig = {
 
 export type InboundDebounceByProvider = Record<string, number>;
 
+export type RateLimitConfig = {
+  /** Enable rate limiting (default: false). */
+  enabled?: boolean;
+  /** Max messages per hour per user per channel (default: 5). */
+  messagesPerHour?: number;
+  /** Custom rate limit reply message. */
+  rateLimitedReply?: string;
+};
+
 export type InboundDebounceConfig = {
   debounceMs?: number;
   byChannel?: InboundDebounceByProvider;
+  /** Rate limit messages per user per channel. */
+  rateLimit?: RateLimitConfig;
 };
 
 export type BroadcastStrategy = "parallel" | "sequential";

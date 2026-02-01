@@ -336,10 +336,20 @@ export const QueueSchema = z
   .strict()
   .optional();
 
+export const RateLimitSchema = z
+  .object({
+    enabled: z.boolean().optional(),
+    messagesPerHour: z.number().int().positive().optional(),
+    rateLimitedReply: z.string().optional(),
+  })
+  .strict()
+  .optional();
+
 export const InboundDebounceSchema = z
   .object({
     debounceMs: z.number().int().nonnegative().optional(),
     byChannel: DebounceMsBySurfaceSchema,
+    rateLimit: RateLimitSchema,
   })
   .strict()
   .optional();

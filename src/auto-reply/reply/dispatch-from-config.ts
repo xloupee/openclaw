@@ -10,6 +10,7 @@ import {
 } from "../../logging/diagnostic.js";
 import { getGlobalHookRunner } from "../../plugins/hook-runner-global.js";
 import { getReplyFromConfig } from "../reply.js";
+import { buildRateLimitKey, formatRateLimitReply, getGlobalRateLimiter } from "../rate-limit.js";
 import type { FinalizedMsgContext } from "../templating.js";
 import type { GetReplyOptions, ReplyPayload } from "../types.js";
 import { formatAbortReplyText, tryFastAbortFromMessage } from "./abort.js";
@@ -143,6 +144,29 @@ export async function dispatchReplyFromConfig(params: {
   if (shouldSkipDuplicateInbound(ctx)) {
     recordProcessed("skipped", { reason: "duplicate" });
     return { queuedFinal: false, counts: dispatcher.getQueuedCounts() };
+  }
+
+  // Rate limit check
+  const rateLimitConfig = cfg.messages?.inbound?.rateLimit;
+  const rateLimiter = getGlobalRateLimiter(rateLimitConfig);
+  if (rateLimiter && rateLimitConfig?.enabled) {
+    const senderId = ctx.SenderId ?? ctx.From ?? "";
+    if (senderId) {
+      const rateLimitKey = buildRateLimitKey({
+        channel,
+        accountId: ctx.AccountId,
+        senderId,
+      });
+      const rateLimitResult = rateLimiter.check(rateLimitKey);
+      if (!rateLimitResult.allowed && rateLimitResult.resetInMs !== undefined) {
+        const rateLimitReply =
+          rateLimitConfig.rateLimitedReply ?? formatRateLimitReply(rateLimitResult.resetInMs);
+        dispatcher.sendFinalReply({ text: rateLimitReply });
+        await dispatcher.waitForIdle();
+        recordProcessed("skipped", { reason: "rate_limited" });
+        return { queuedFinal: true, counts: dispatcher.getQueuedCounts() };
+      }
+    }
   }
 
   const inboundAudio = isInboundAudioContext(ctx);
