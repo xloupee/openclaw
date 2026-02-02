@@ -144,6 +144,12 @@ And enable the plugin:
 pnpm openclaw channels status --probe
 ```
 
+## Check context window usage
+
+```bash
+cat ~/.openclaw/agents/main/sessions/sessions.json | jq '.["agent:main:main"] | {inputTokens, outputTokens, totalTokens, contextTokens, model}'
+```
+
 ## Troubleshooting
 
 If startup fails, check logs:
