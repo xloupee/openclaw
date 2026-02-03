@@ -97,6 +97,8 @@ export type SessionConfig = {
     /** Max ping-pong turns between requester/target (0–5). Default: 5. */
     maxPingPongTurns?: number;
   };
+  /** Minutes of inactivity before proactive session reset (used by proactive-reset script). */
+  proactiveResetMinutes?: number;
 };
 
 export type LoggingConfig = {

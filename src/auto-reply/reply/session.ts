@@ -219,9 +219,22 @@ export async function initSessionState(params: {
     resetType,
     resetOverride: channelReset,
   });
-  const freshEntry = entry
-    ? evaluateSessionFreshness({ updatedAt: entry.updatedAt, now, policy: resetPolicy }).fresh
-    : false;
+  const freshnessResult = entry
+    ? evaluateSessionFreshness({ updatedAt: entry.updatedAt, now, policy: resetPolicy })
+    : null;
+  const freshEntry = freshnessResult?.fresh ?? false;
+
+  // DEBUG: idle timeout
+  console.log("[session] idle-timeout debug:", {
+    sessionKey,
+    entryUpdatedAt: entry?.updatedAt,
+    now,
+    idleMs: entry ? now - entry.updatedAt : null,
+    idleMinutes: resetPolicy.idleMinutes,
+    thresholdMs: resetPolicy.idleMinutes ? resetPolicy.idleMinutes * 60_000 : null,
+    freshnessResult,
+    freshEntry,
+  });
 
   if (!isNewSession && freshEntry) {
     sessionId = entry.sessionId;

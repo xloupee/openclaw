@@ -82,6 +82,7 @@ export const SessionSchema = z
       })
       .strict()
       .optional(),
+    proactiveResetMinutes: z.number().int().positive().optional(),
   })
   .strict()
   .optional();
